@@ -19,9 +19,9 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-            <li class="nav-item"><a class="nav-link disabled" href="#">Produk</a></li>
-            <li class="nav-item"><a class="nav-link disabled" href="#">Jasa</a></li>
-            <li class="nav-item"><a class="nav-link disabled" href="#">Sewa</a></li>
+            <li class="nav-item"><a class="nav-link" href="pages/produk.html">Produk</a></li>
+            <li class="nav-item"><a class="nav-link" href="pages/jasa.html">Jasa</a></li>
+            <li class="nav-item"><a class="nav-link" href="pages/sewa.html">Sewa</a></li>
             <li class="nav-item"><a class="btn btn-outline-success" href="pages/login.html">Login</a></li>
             <li class="nav-item"><a class="btn btn-success" href="pages/register.html">Register</a></li>
           </ul>
@@ -34,8 +34,8 @@
         <div class="row align-items-center g-4">
           <div class="col-lg-7">
             <span class="badge text-bg-light text-success mb-3">Cloud Computing ALP</span>
-            <h1 class="display-4 fw-bold">Fondasi awal website MarketFlow.</h1>
-            <p class="lead mt-3">Checkpoint 1 fokus pada struktur halaman dasar, autentikasi Firebase, dan persiapan pengembangan modul produk, jasa, dan sewa.</p>
+            <h1 class="display-4 fw-bold">Marketplace sederhana untuk produk, jasa, dan sewa barang.</h1>
+            <p class="lead mt-3">MarketFlow menggunakan Firebase Authentication, Realtime Database, dan Storage untuk mendukung proses login, CRUD data, order, serta upload bukti pembayaran.</p>
             <div class="d-flex flex-wrap gap-2 mt-4">
               <a class="btn btn-light btn-lg" href="pages/register.html">Mulai Register</a>
               <a class="btn btn-outline-light btn-lg" href="pages/login.html">Login</a>
@@ -45,10 +45,10 @@
             <div class="hero-card">
               <h2 class="h4 fw-bold">Fitur Utama</h2>
               <ul class="mb-0 lh-lg">
-                <li>Halaman beranda, login, dan register</li>
-                <li>Integrasi Firebase Authentication</li>
-                <li>Verifikasi email setelah register</li>
-                <li>Persiapan role admin dan user</li>
+                <li>Role admin dan user</li>
+                <li>CRUD produk, jasa, dan sewa barang</li>
+                <li>Order dengan upload bukti bayar</li>
+                <li>Konfirmasi pembayaran via WhatsApp</li>
               </ul>
             </div>
           </div>
@@ -59,29 +59,29 @@
     <main class="section-pad">
       <div class="container">
         <div class="text-center mb-5">
-          <p class="text-success fw-bold mb-2">Roadmap Pengembangan</p>
-          <h2 class="fw-bold">Modul utama untuk checkpoint selanjutnya</h2>
+          <p class="text-success fw-bold mb-2">Layanan MarketFlow</p>
+          <h2 class="fw-bold">Tiga halaman layanan yang dipisahkan</h2>
         </div>
         <div class="row g-4">
           <div class="col-md-4">
             <article class="feature-card h-100">
               <h3>Produk</h3>
               <p>Katalog barang seperti kulkas, aksesoris elektronik, dan produk digital.</p>
-              <span class="badge text-bg-secondary">Segera dikembangkan</span>
+              <a class="btn btn-outline-success" href="pages/produk.html">Lihat Produk</a>
             </article>
           </div>
           <div class="col-md-4">
             <article class="feature-card h-100">
               <h3>Jasa</h3>
               <p>Layanan edit video, desain poster, preset color grading, dan template After Effects.</p>
-              <span class="badge text-bg-secondary">Segera dikembangkan</span>
+              <a class="btn btn-outline-success" href="pages/jasa.html">Lihat Jasa</a>
             </article>
           </div>
           <div class="col-md-4">
             <article class="feature-card h-100">
               <h3>Sewa Barang</h3>
               <p>Penyewaan kamera, proyektor, kulkas, tripod, dan perlengkapan lain.</p>
-              <span class="badge text-bg-secondary">Segera dikembangkan</span>
+              <a class="btn btn-outline-success" href="pages/sewa.html">Lihat Sewa</a>
             </article>
           </div>
         </div>
