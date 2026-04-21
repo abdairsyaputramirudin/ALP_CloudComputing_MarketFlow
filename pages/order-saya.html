@@ -19,8 +19,21 @@
       <section class="page-title">
         <p class="text-success fw-bold mb-2">User</p>
         <h1 class="fw-bold">Order Saya</h1>
-        <p class="text-muted">Pantau status pembayaran untuk pesanan produk, jasa, dan sewa.</p>
+        <p class="text-muted">Pantau pembayaran, progres order, serta catatan dari admin.</p>
       </section>
+      <div id="alert-area"></div>
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <button class="btn btn-sm btn-outline-secondary active" data-payment-filter="Semua">Semua</button>
+        <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Belum Terverifikasi">Belum Terverifikasi</button>
+        <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Menunggu Verifikasi">Menunggu Verifikasi</button>
+        <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Lunas">Lunas</button>
+      </div>
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <button class="btn btn-sm btn-outline-dark active" data-type-filter="Semua">Semua Tipe</button>
+        <button class="btn btn-sm btn-outline-dark" data-type-filter="produk">Produk</button>
+        <button class="btn btn-sm btn-outline-dark" data-type-filter="jasa">Jasa</button>
+        <button class="btn btn-sm btn-outline-dark" data-type-filter="sewa">Sewa</button>
+      </div>
       <div id="order-list"></div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

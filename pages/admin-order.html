@@ -21,15 +21,27 @@
         <aside class="col-lg-3">
           <div class="admin-sidebar">
             <a class="admin-link" href="dashboard-admin.html">Dashboard</a>
-            <a class="admin-link" href="admin-produk.html">CRUD Produk</a>
-            <a class="admin-link" href="admin-jasa.html">CRUD Jasa</a>
-            <a class="admin-link" href="admin-sewa.html">CRUD Sewa</a>
+            <a class="admin-link" href="admin-produk.html">Produk</a>
+            <a class="admin-link" href="admin-jasa.html">Jasa</a>
+            <a class="admin-link" href="admin-sewa.html">Sewa</a>
             <a class="admin-link active" href="admin-order.html">Order Masuk</a>
           </div>
         </aside>
         <section class="col-lg-9">
           <h1 class="fw-bold">Order Masuk</h1>
-          <p class="text-muted">Admin dapat melihat bukti pembayaran dan mengubah status verifikasi.</p>
+          <p class="text-muted">Admin dapat melihat data buyer, verifikasi pembayaran, update progres order, dan memberi catatan untuk user.</p>
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <button class="btn btn-sm btn-outline-secondary active" data-payment-filter="Semua">Semua</button>
+            <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Belum Terverifikasi">Belum Terverifikasi</button>
+            <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Menunggu Verifikasi">Menunggu Verifikasi</button>
+            <button class="btn btn-sm btn-outline-secondary" data-payment-filter="Lunas">Lunas</button>
+          </div>
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <button class="btn btn-sm btn-outline-dark active" data-type-filter="Semua">Semua Tipe</button>
+            <button class="btn btn-sm btn-outline-dark" data-type-filter="produk">Produk</button>
+            <button class="btn btn-sm btn-outline-dark" data-type-filter="jasa">Jasa</button>
+            <button class="btn btn-sm btn-outline-dark" data-type-filter="sewa">Sewa</button>
+          </div>
           <div id="order-list"></div>
         </section>
       </div>

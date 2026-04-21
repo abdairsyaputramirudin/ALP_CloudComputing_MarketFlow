@@ -9,13 +9,11 @@ import {
   ref,
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { firebaseConfig, adminEmail } from "./firebase-config.js";
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
-export const storage = getStorage(app);
 
 export function isFirebaseConfigured() {
   return !Object.values(firebaseConfig).some((value) =>
