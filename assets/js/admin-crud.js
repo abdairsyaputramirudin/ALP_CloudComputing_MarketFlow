@@ -20,25 +20,25 @@ const pageConfig = {
     title: "Produk",
     collection: "products",
     formId: "item-form",
-    fields: ["name", "category", "price", "description"],
+    fields: ["name", "category", "price", "stock", "isActive", "description"],
     listTitle: (item) => item.name,
-    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.price)}`
+    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.price)} - Stok: ${Number(item.stock || 0)} - ${item.isActive === false ? "Disembunyikan" : "Ditampilkan"}`
   },
   services: {
     title: "Jasa",
     collection: "services",
     formId: "item-form",
-    fields: ["name", "category", "price", "description"],
+    fields: ["name", "category", "price", "estimatedDays", "isActive", "description"],
     listTitle: (item) => item.name,
-    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.price)}`
+    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.price)} - Estimasi: ${Number(item.estimatedDays || 1)} hari - ${item.isActive === false ? "Disembunyikan" : "Ditampilkan"}`
   },
   rentals: {
     title: "Sewa Barang",
     collection: "rentals",
     formId: "item-form",
-    fields: ["name", "category", "pricePerDay", "description"],
+    fields: ["name", "category", "pricePerDay", "isActive", "description"],
     listTitle: (item) => item.name,
-    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.pricePerDay)} / hari`
+    listSubtitle: (item) => `${item.category} - ${formatCurrency(item.pricePerDay)} / hari - ${item.isActive === false ? "Disembunyikan" : "Ditampilkan"}`
   }
 };
 
@@ -47,13 +47,71 @@ const config = pageConfig[pageName];
 const form = document.querySelector("#item-form");
 const list = document.querySelector("#item-list");
 const itemId = document.querySelector("#item-id");
+const categoryInput = document.querySelector("#category");
+const categoryOptions = document.querySelector("#category-options");
+const categorySuggestions = document.querySelector("#category-suggestions");
+let knownCategories = [];
+
+function normalizeCategory(value) {
+  const clean = value.trim().replace(/\s+/g, " ").toLowerCase();
+  if (!clean) {
+    return "";
+  }
+  return clean
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function renderCategorySuggestions(filterText = "") {
+  if (!categorySuggestions) {
+    return;
+  }
+
+  const filtered = (filterText
+    ? knownCategories.filter((category) => category.toLowerCase().includes(filterText.toLowerCase()))
+    : knownCategories
+  ).slice(0, 8);
+
+  if (!filtered.length) {
+    categorySuggestions.innerHTML = "";
+    return;
+  }
+
+  categorySuggestions.innerHTML = filtered
+    .map((category) => `<button type="button" class="list-group-item list-group-item-action" data-category-item="${category}">${category}</button>`)
+    .join("");
+
+  categorySuggestions.querySelectorAll("[data-category-item]").forEach((button) => {
+    button.addEventListener("click", () => {
+      categoryInput.value = button.dataset.categoryItem;
+      categorySuggestions.innerHTML = "";
+      categoryInput.focus();
+    });
+  });
+}
 
 function getPayload() {
   const payload = {};
 
   config.fields.forEach((field) => {
     const input = document.querySelector(`#${field}`);
-    payload[field] = input.type === "number" ? Number(input.value) : input.value.trim();
+    if (input.type === "checkbox") {
+      payload[field] = input.checked;
+      return;
+    }
+
+    if (input.type === "number") {
+      payload[field] = Number(input.value);
+      return;
+    }
+
+    if (field === "category") {
+      payload[field] = normalizeCategory(input.value);
+      return;
+    }
+
+    payload[field] = input.value.trim();
   });
 
   payload.updatedAt = serverTimestamp();
@@ -63,7 +121,15 @@ function getPayload() {
 function fillForm(id, item) {
   itemId.value = id;
   config.fields.forEach((field) => {
-    document.querySelector(`#${field}`).value = item[field] ?? "";
+    const input = document.querySelector(`#${field}`);
+    if (!input) {
+      return;
+    }
+    if (input.type === "checkbox") {
+      input.checked = item[field] !== false;
+      return;
+    }
+    input.value = item[field] ?? "";
   });
   document.querySelector("#submit-label").textContent = `Update ${config.title}`;
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -82,6 +148,14 @@ async function deleteItem(id) {
 
 function renderList(data) {
   const entries = data ? Object.entries(data) : [];
+  const categories = [...new Set(entries.map(([, item]) => normalizeCategory(item.category || "")).filter(Boolean))];
+  knownCategories = categories.sort();
+
+  if (categoryOptions) {
+    categoryOptions.innerHTML = knownCategories
+      .map((category) => `<option value="${category}"></option>`)
+      .join("");
+  }
 
   if (!entries.length) {
     list.innerHTML = `<div class="empty-card">Belum ada data ${config.title.toLowerCase()}.</div>`;
@@ -124,6 +198,24 @@ function listenItems() {
 }
 
 function setupForm() {
+  if (categoryInput) {
+    categoryInput.addEventListener("focus", () => {
+      renderCategorySuggestions(categoryInput.value.trim());
+    });
+
+    categoryInput.addEventListener("input", () => {
+      renderCategorySuggestions(categoryInput.value.trim());
+    });
+
+    categoryInput.addEventListener("blur", () => {
+      setTimeout(() => {
+        if (categorySuggestions) {
+          categorySuggestions.innerHTML = "";
+        }
+      }, 150);
+    });
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 

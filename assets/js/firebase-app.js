@@ -44,6 +44,30 @@ export function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
+export function parseTimestamp(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+export function formatDateTime(value) {
+  const timestamp = parseTimestamp(value);
+  if (!timestamp) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(timestamp));
+}
+
 export async function getCurrentUserRole(user) {
   if (!user) {
     return null;

@@ -7,6 +7,8 @@ import {
 import {
   auth,
   database,
+  formatDateTime,
+  parseTimestamp,
   requireLogin,
   setupLogoutButton,
   showAlert
@@ -15,14 +17,25 @@ import {
 const list = document.querySelector("#order-list");
 const paymentButtons = document.querySelectorAll("[data-payment-filter]");
 const typeButtons = document.querySelectorAll("[data-type-filter]");
+const completionButtons = document.querySelectorAll("[data-completion-filter]");
+const searchInput = document.querySelector("#order-search-user");
 let paymentFilter = "Semua";
 let typeFilter = "Semua";
+let completionFilter = "Semua";
+let searchKeyword = "";
 let orderCache = {};
 let countdownInterval = null;
 
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function toLocalDateId(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function parseDate(dateId) {
@@ -65,6 +78,33 @@ function getPaymentBadgeClass(status) {
   return "text-bg-secondary";
 }
 
+function getCompletionStatus(order) {
+  const paymentLunas = normalizePaymentStatus(order.paymentStatus) === "Lunas";
+  if (!paymentLunas) {
+    return "Belum Selesai";
+  }
+
+  if (order.type === "produk") {
+    return order.shippingStatus === "Sampai" && order.buyerReceivedConfirmed
+      ? "Selesai"
+      : "Belum Selesai";
+  }
+
+  if (order.type === "jasa") {
+    return order.serviceStatus === "Selesai" && order.serviceDoneConfirmed
+      ? "Selesai"
+      : "Belum Selesai";
+  }
+
+  if (order.type === "sewa") {
+    return order.rentalStatus === "Dikembalikan" && order.rentalReturnedConfirmed
+      ? "Selesai"
+      : "Belum Selesai";
+  }
+
+  return "Belum Selesai";
+}
+
 function getRentalTimeText(order) {
   const startDate = order.actualRentalStartDate || order.rentalStartDate;
   const days = diffDays(order.rentalEndDate);
@@ -91,6 +131,31 @@ function getRentalTimeText(order) {
     return `Lewat ${Math.abs(days)} hari`;
   }
   return `Sisa ${days} hari`;
+}
+
+function getServiceDurationInfo(order) {
+  const qty = Math.max(1, Number(order.serviceQty || 1));
+  const perServiceDays = Math.max(1, Number(order.serviceEstimatedDays || 1));
+  const totalDays = Math.max(1, Number(order.serviceDurationDaysTotal || (qty * perServiceDays)));
+  const startDate = order.serviceStartDate || "-";
+  let endDate = order.serviceEstimatedEndDate || "-";
+
+  // Hitung ulang dari tanggal mulai + total hari supaya konsisten (menghindari data lama yang sempat geser timezone).
+  if (order.serviceStartDate) {
+    const date = new Date(`${order.serviceStartDate}T00:00:00`);
+    if (!Number.isNaN(date.getTime())) {
+      date.setDate(date.getDate() + totalDays);
+      endDate = toLocalDateId(date);
+    }
+  }
+
+  return {
+    qty,
+    perServiceDays,
+    totalDays,
+    startDate,
+    endDate
+  };
 }
 
 async function confirmOrderAction(orderId, action) {
@@ -146,8 +211,13 @@ function renderOrderProgress(order, orderId) {
   }
 
   if (order.type === "jasa") {
+    const serviceInfo = getServiceDurationInfo(order);
     return `
-      <small>Deadline: ${order.serviceDeadline || "-"}</small>
+      <small>Jumlah paket jasa: ${serviceInfo.qty}</small>
+      <small>Estimasi per jasa: ${serviceInfo.perServiceDays} hari</small>
+      <small>Estimasi total pengerjaan: ${serviceInfo.totalDays} hari</small>
+      <small>Mulai order: ${serviceInfo.startDate}</small>
+      <small>Estimasi selesai: ${serviceInfo.endDate}</small>
       <small>Status jasa: ${order.serviceStatus || "Menunggu Pengerjaan"}</small>
       <small>Konfirmasi selesai: ${order.serviceDoneConfirmed ? "Sudah" : "Belum"}</small>
       ${order.serviceStatus === "Selesai" && !order.serviceDoneConfirmed
@@ -176,16 +246,43 @@ function renderOrderProgress(order, orderId) {
   return "";
 }
 
+function renderUserWorkflowSection(order, orderId) {
+  return `
+    <div class="order-workflow">
+      <label class="form-label mb-1 order-section-title">Progress Order</label>
+      <div class="order-workflow__details">
+        ${renderOrderProgress(order, orderId)}
+      </div>
+    </div>
+  `;
+}
+
 function getFilteredEntries() {
   const entries = orderCache
-    ? Object.entries(orderCache).filter(([, order]) => order.userId === auth.currentUser.uid).reverse()
+    ? Object.entries(orderCache).filter(([, order]) => order.userId === auth.currentUser.uid)
     : [];
+  const sortedEntries = entries.sort((a, b) => {
+    const aTime = parseTimestamp(a[1]?.createdAt) || parseTimestamp(a[1]?.createdAtClient) || 0;
+    const bTime = parseTimestamp(b[1]?.createdAt) || parseTimestamp(b[1]?.createdAtClient) || 0;
+    return bTime - aTime;
+  });
 
-  return entries.filter(([, order]) => {
+  return sortedEntries.filter(([, order]) => {
     const matchPayment = paymentFilter === "Semua"
       || normalizePaymentStatus(order.paymentStatus) === paymentFilter;
     const matchType = typeFilter === "Semua" || order.type === typeFilter;
-    return matchPayment && matchType;
+    const completionStatus = getCompletionStatus(order);
+    const matchCompletion = completionFilter === "Semua" || completionStatus === completionFilter;
+    const keyword = searchKeyword.trim().toLowerCase();
+    const searchText = [
+      order.itemName,
+      order.type,
+      order.paymentMethod,
+      normalizePaymentStatus(order.paymentStatus),
+      completionStatus
+    ].join(" ").toLowerCase();
+    const matchSearch = !keyword || searchText.includes(keyword);
+    return matchPayment && matchType && matchCompletion && matchSearch;
   });
 }
 
@@ -200,24 +297,43 @@ function renderOrders(data) {
 
   list.innerHTML = entries
     .map(([id, order]) => `
-      <article class="data-card">
-        <div>
-          <div class="d-flex gap-2 mb-2 flex-wrap">
-            <span class="badge text-bg-dark text-capitalize">${order.type}</span>
-            <span class="badge ${getPaymentBadgeClass(normalizePaymentStatus(order.paymentStatus))}">${normalizePaymentStatus(order.paymentStatus)}</span>
+      <article class="data-card order-card">
+        <div class="order-card__main">
+          <div class="order-card__summary">
+            <div class="order-card__summary-left">
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="badge text-bg-dark text-capitalize">${order.type}</span>
+                <span class="badge ${getPaymentBadgeClass(normalizePaymentStatus(order.paymentStatus))}">${normalizePaymentStatus(order.paymentStatus)}</span>
+                <span class="badge ${getCompletionStatus(order) === "Selesai" ? "text-bg-success" : "text-bg-secondary"}">${getCompletionStatus(order)}</span>
+              </div>
+              <h3 class="order-card__title">${order.itemName}</h3>
+              <p class="order-card__email">${order.paymentMethod || "-"} | ${formatDateTime(order.createdAt || order.createdAtClient)}</p>
+            </div>
+            <div class="order-card__summary-right">
+              <small class="order-summary-total">Total: Rp${Number(order.totalPayment || order.itemPrice || 0).toLocaleString("id-ID")}</small>
+              <button class="btn btn-sm btn-outline-success" data-toggle-detail="${id}">Lihat Detail</button>
+            </div>
           </div>
-          <h3>${order.itemName}</h3>
-          <p class="mb-1">Metode: ${order.paymentMethod || "-"}</p>
-          <small>Buyer: ${order.buyerName || "-"} (${order.buyerWhatsapp || "-"})</small>
-          ${renderOrderProgress(order, id)}
-          <div class="mt-2 d-flex gap-2 flex-wrap">
-            ${order.proofLink ? `<a class="btn btn-sm btn-outline-secondary" href="${order.proofLink}" target="_blank" rel="noreferrer">Lihat Bukti Bayar</a>` : ""}
-            ${order.adminWhatsappUrl ? `<a class="btn btn-sm btn-success" href="${order.adminWhatsappUrl}" target="_blank" rel="noreferrer">Chat Admin</a>` : ""}
-          </div>
-          <div class="mt-3">
-            <small class="d-block">Catatan admin:</small>
-            <p class="mb-1">${order.adminNote || "-"}</p>
-            ${order.adminAttachmentLink ? `<a href="${order.adminAttachmentLink}" target="_blank" rel="noreferrer">Lihat Link dari Admin</a>` : ""}
+          <div class="order-card__detail d-none" id="order-detail-${id}">
+            <div class="order-card__meta">
+              <div><span class="order-meta__label">Buyer</span><span class="order-meta__value">${order.buyerName || "-"}</span></div>
+              <div><span class="order-meta__label">WhatsApp</span><span class="order-meta__value">${order.buyerWhatsapp || "-"}</span></div>
+              <div><span class="order-meta__label">Metode Bayar</span><span class="order-meta__value">${order.paymentMethod || "-"}</span></div>
+              <div><span class="order-meta__label">Status Bayar</span><span class="order-meta__value">${normalizePaymentStatus(order.paymentStatus)}</span></div>
+              <div><span class="order-meta__label">Status Order</span><span class="order-meta__value">${getCompletionStatus(order)}</span></div>
+              <div><span class="order-meta__label">Order Dibuat</span><span class="order-meta__value">${formatDateTime(order.createdAt || order.createdAtClient)}</span></div>
+              <div><span class="order-meta__label">Terakhir Update</span><span class="order-meta__value">${formatDateTime(order.workflowUpdatedAt || order.paymentUpdatedAt || order.adminUpdatedAt)}</span></div>
+            </div>
+            <div class="order-card__actions-row">
+              ${order.proofLink ? `<a class="btn btn-sm btn-outline-secondary" href="${order.proofLink}" target="_blank" rel="noreferrer">Lihat Bukti Bayar</a>` : ""}
+              ${order.adminWhatsappUrl ? `<a class="btn btn-sm btn-success" href="${order.adminWhatsappUrl}" target="_blank" rel="noreferrer">Chat Admin</a>` : ""}
+            </div>
+            ${renderUserWorkflowSection(order, id)}
+            <div class="order-note-box">
+              <label class="form-label mb-1 order-section-title">Catatan admin</label>
+              <p class="mb-1">${order.adminNote || "-"}</p>
+              ${order.adminAttachmentLink ? `<a href="${order.adminAttachmentLink}" target="_blank" rel="noreferrer">Lihat Link dari Admin</a>` : ""}
+            </div>
           </div>
         </div>
       </article>
@@ -227,6 +343,18 @@ function renderOrders(data) {
   list.querySelectorAll("[data-user-action]").forEach((button) => {
     button.addEventListener("click", () => {
       confirmOrderAction(button.dataset.orderId, button.dataset.userAction);
+    });
+  });
+
+  list.querySelectorAll("[data-toggle-detail]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.toggleDetail;
+      const detailBox = document.querySelector(`#order-detail-${id}`);
+      if (!detailBox) {
+        return;
+      }
+      detailBox.classList.toggle("d-none");
+      button.textContent = detailBox.classList.contains("d-none") ? "Lihat Detail" : "Tutup Detail";
     });
   });
 }
@@ -249,6 +377,22 @@ function setupFilters() {
       renderOrders(orderCache);
     });
   });
+
+  completionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      completionFilter = button.dataset.completionFilter;
+      completionButtons.forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      renderOrders(orderCache);
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      searchKeyword = searchInput.value || "";
+      renderOrders(orderCache);
+    });
+  }
 }
 
 function setupCountdownRefresh() {

@@ -183,6 +183,178 @@ body {
   color: var(--mf-primary-dark);
 }
 
+.category-field {
+  position: relative;
+}
+
+.category-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  z-index: 30;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--mf-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.order-admin-page__title {
+  font-size: clamp(1.9rem, 2.3vw, 2.4rem);
+  letter-spacing: -0.02em;
+}
+
+.order-admin-page__subtitle {
+  max-width: 760px;
+  font-size: 1.02rem;
+  margin-bottom: 20px;
+}
+
+.order-user-page__title {
+  font-size: clamp(1.8rem, 2.2vw, 2.2rem);
+  letter-spacing: -0.02em;
+}
+
+.order-user-page__subtitle {
+  max-width: 720px;
+  font-size: 1.01rem;
+  margin-bottom: 20px;
+}
+
+.order-filter-group .btn {
+  padding: 7px 14px;
+  font-size: 0.93rem;
+  border-radius: 10px;
+}
+
+.order-card {
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.order-card__main {
+  width: 100%;
+}
+
+.order-card__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.order-card__summary-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-card__summary-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  min-width: 240px;
+}
+
+.order-summary-time {
+  color: var(--mf-muted);
+  font-size: 0.84rem;
+}
+
+.order-summary-total {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--mf-primary-dark);
+}
+
+.order-card__detail {
+  margin-top: 14px;
+  border-top: 1px dashed var(--mf-line);
+  padding-top: 14px;
+}
+
+.order-card__pay-status {
+  width: 230px;
+}
+
+.order-card__title {
+  margin-bottom: 6px;
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+
+.order-card__email {
+  margin-bottom: 0;
+  font-size: 1.02rem;
+  color: var(--mf-muted);
+}
+
+.order-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--mf-line);
+  border-radius: 12px;
+  background: #fcfefe;
+}
+
+.order-meta__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #7d8998;
+}
+
+.order-meta__value {
+  display: block;
+  font-size: 0.98rem;
+  color: var(--mf-ink);
+}
+
+.order-card__actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.order-workflow {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--mf-line);
+  border-radius: 12px;
+  background: #fbfdfd;
+}
+
+.order-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7d8998;
+}
+
+.order-workflow__details {
+  margin-top: 8px;
+}
+
+.order-workflow__details small {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.order-note-box {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 @media (max-width: 768px) {
   .hero-section {
     padding: 56px 0;
@@ -194,5 +366,23 @@ body {
 
   .data-card__actions {
     min-width: 100%;
+  }
+
+  .order-card__summary {
+    flex-direction: column;
+  }
+
+  .order-card__summary-right {
+    min-width: 100%;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .order-card__pay-status {
+    width: 100%;
+  }
+
+  .order-card__meta {
+    grid-template-columns: 1fr;
   }
 }
